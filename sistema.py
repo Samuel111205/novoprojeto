@@ -1,4 +1,4 @@
-import novoprojeto.banco_do_sistema as banco_do_sistema
+import banco_do_sistema
 
 # -------------------------------
 # Classe para gerenciar o Banco
@@ -40,24 +40,43 @@ class Aluno:
             print(f"Id: {i[0]}|Nome: {i[1]}| Turma: {i[2]}|Curso: {i[3]}")
         conn.close()
     
-    def listar_alunos_de_um_curso(self,curso_id):
+    def listar_alunos_de_um_curso(self,curso_id,turma_id):
         conn=self.db_manager.connect()
         cursor=conn.cursor()
 
-        cursor.execute("SELECT id,nome,turma,curso FROM alunos WHERE curso=?",(curso_id,))
+        cursor.execute("SELECT id,nome FROM alunos WHERE curso=? AND turma=?",(curso_id,turma_id))
         registro=cursor.fetchall()
 
-        print(f"Lista dos alunos do curso de {curso_id}")
+        print(f"Lista dos alunos da turma de {turma_id} no curso de {curso_id}")
+        for i in registro:
+            print(f"Id: {i[0]}| Nome: {i[1]}")
+        conn.close()
 
-    def atualizar(self, aluno_id, nome=None, curso=None, turma=None):
+
+    def atualizar(self):
         conn = self.db_manager.connect()
         cursor = conn.cursor()
-        if nome:
+        print("1.Atualizar nome do aluno\n2.Atualizar curso do aluno\n3.Atualizar turma do aluno")
+        opcao=int(input("Digite a sua opção: "))
+
+        if opcao==1:
+            aluno.listar()
+            aluno_id=int(input("Digite o id do aluno a ser atualizado: "))
+            nome=input("Digite o novo nome do aluno: ").title()
             cursor.execute("UPDATE alunos SET nome=? WHERE id=?", (nome, aluno_id))
-        if curso:
+
+        elif opcao==2:
+            aluno.listar()
+            aluno_id=int(input("Digite o id do aluno a  ser atualizado: "))
+            curso=input("Digite o novo curso do aluno: ").title()
             cursor.execute("UPDATE alunos SET curso=? WHERE id=?", (curso, aluno_id))
-        if turma:
+        
+        elif opcao==3:
+            aluno.listar()
+            aluno_id=int(input("Digite o id do aluno a  ser atualizado: "))
+            turma=input("Digite a nova turma do aluno: ").upper()
             cursor.execute("UPDATE alunos SET turma=? WHERE id=?", (turma, aluno_id))
+        
         conn.commit()
         conn.close()
         print("✏️ Dados do aluno atualizados!")
@@ -249,7 +268,8 @@ if __name__ == "__main__":
             from datetime import date
 
             while True:
-                print("1.Cadastrar alunos\n2.Litar alunos\n3.Sair")
+                print("1.Cadastrar alunos\n2.Litar alunos\n3.Listar alunos de um curso")
+                print("4.Atualizar um aluno\n5.Deletar um aluno\n6.Sair")
                 opcao=int(input("Digite a sua opção: "))
 
                 if opcao==1:
@@ -274,7 +294,35 @@ if __name__ == "__main__":
 
                 elif opcao==2:
                     aluno.listar()
+
                 elif opcao==3:
+                    print("Ques ver alunos de que curso?: ")
+                    print("1.Informatica\n2.Contabilidade\n3.Finanças")
+                    opcao=int(input("Digite a sua opção: "))
+
+                    if opcao==1:
+                        turma_id=input("Digite o numero da turma para ver os alunos: ").upper()
+                        curso_id="Informatica"
+                        aluno.listar_alunos_de_um_curso(curso_id,turma_id)
+                    
+                    elif opcao==2:
+                        turma_id=input("Digite o numero da turma para ver os alunos: ").upper()
+                        curso_id="Contabilidade"
+                        aluno.listar_alunos_de_um_curso(curso_id,turma_id)
+                    
+                    elif opcao==3:
+                        turma_id=input("Digite o numero da turma para ver os alunos: ").upper()
+                        curso_id="Finanças"
+                        aluno.listar_alunos_de_um_curso(curso_id,turma_id)
+                    
+                    else:
+                        print("Opção invalida")
+                
+                elif opcao==4:
+                    aluno.atualizar()        
+
+                    
+                elif opcao==6:
                     break
         
         case 2:
