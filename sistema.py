@@ -47,9 +47,22 @@ class Aluno:
         cursor.execute("SELECT id,nome FROM alunos WHERE curso=? AND turma=?",(curso_id,turma_id))
         registro=cursor.fetchall()
 
-        print(f"Lista dos alunos da turma de {turma_id} no curso de {curso_id}")
+        print(f"📌Lista dos alunos da turma de {turma_id} no curso de {curso_id}")
         for i in registro:
             print(f"Id: {i[0]}| Nome: {i[1]}")
+        conn.close()
+
+    def ver_dados_de_um_aluno(self,nome_aluno):
+        conn=self.db_manager.connect()
+        cursor=conn.cursor()
+
+        cursor.execute("SELECT * FROM alunos WHERE nome=?",(nome_aluno,))
+        registro=cursor.fetchall()
+
+        print("\t📌Dados do aluno")
+
+        for i in registro:
+            print(f"Id: {i[0]}| Nome: {i[1]}| Data_nascimento: {i[2]}| Genero: {i[3]}| Bairro: {i[4]}| Nº de bilhete: {i[5]}| Turma: {i[6]}| Curso: {i[7]}")
         conn.close()
 
 
@@ -84,7 +97,7 @@ class Aluno:
     def deletar(self, aluno_id):
         conn = self.db_manager.connect()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM alunos WHERE id=?", (aluno_id,))
+        cursor.execute("DELETE FROM alunos WHERE nome=?", (aluno_id,))
         conn.commit()
         conn.close()
         print("🗑️ Aluno removido!")
@@ -111,11 +124,37 @@ class Professor:
     def listar(self):
         conn = self.db_manager.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM professores")
+        cursor.execute("SELECT id,nome,especialidade FROM professores")
         professores = cursor.fetchall()
+        print("📌Lista de professores da escola")
+        for i in professores:
+            print(f"Id: {i[0]}|Nome: {i[1]}| especialidade: {i[2]}")
         conn.close()
-        return professores
+    
+    def listar_por_especialidade(self,especialidade_id):
+        conn=self.db_manager.connect()
+        cursor=conn.cursor()
 
+        cursor.execute("SELECT nome FROM professores WHERE especialidade=?",(especialidade_id,))
+        registro=cursor.fetchall()
+
+        print(f"📌Lista do professores da disciplina de {especialidade_id}")
+        for i in registro:
+            print(f"Nome: {i}")
+        conn.close()
+    
+    def ver_dados_do_professor(self,professor_id):
+        conn=self.db_manager.connect()
+        cursor=conn.cursor()
+
+        cursor.execute("SELECT * FROM professores WHERE id=?",(professor_id,))
+        registro=cursor.fetchall()
+
+        print("\t 📌Dados do professor")
+        for i in registro:
+            print(f"Id: {i[0]}| Nome: {i[1]}| Especialidade: {i[2]}| Telefone: {i[3]}| Email: {i[4]}")
+        conn.close()
+    
 
 # -------------------------------
 # Classe Disciplina
@@ -254,10 +293,7 @@ if __name__ == "__main__":
     nota = Nota(db)
     presenca = Presenca(db)
 
-    print("""===BENVINDO AO INSTIUTO POLITECNICO KUNDI PAIHAMA Nº266===\n
-    ===AQUI NOS LECIONAMOS VARIOS CURSOS TECNICOS E FOCADOS NA TECNOLOGIA===""")
-
-    print("================MENU DE OPÇÕES================")
+    print("=======MENU DE OPÇÕES========")
     print("1.Gerenciar alunos\n2.Gerencimento de professores\n3.Gerenciar Disciplina")
     print("4.Gerenciar Matriculas de alunos\n5.Gerenciar Notas\n6.Gerenciar presenças\n7.Sair do sistema")
 
@@ -269,7 +305,7 @@ if __name__ == "__main__":
 
             while True:
                 print("1.Cadastrar alunos\n2.Litar alunos\n3.Listar alunos de um curso")
-                print("4.Atualizar um aluno\n5.Deletar um aluno\n6.Sair")
+                print("4.Atualizar um aluno\n5.Ver dados de um aluno\n6.Deletar aluno\n7.Sair")
                 opcao=int(input("Digite a sua opção: "))
 
                 if opcao==1:
@@ -282,7 +318,7 @@ if __name__ == "__main__":
                     media=float(input("Digite a media do seu certificado: "))
 
                     idade=date.today().year-ano
-                    if 14<idade<18 and 12<=media<=20:
+                    if 14<idade<=18 and 12<=media<=20:
                         curso = input("Digite o curso que ques fazer (Informatica/Contabilidade/Finanças): ").capitalize()
                         if curso in ["Informatica","Contabilidade","Finanças"]:
                             turma=input("Digite a turma do aluno: ").upper()
@@ -319,15 +355,46 @@ if __name__ == "__main__":
                         print("Opção invalida")
                 
                 elif opcao==4:
-                    aluno.atualizar()        
-
+                    aluno.atualizar() 
+                
+                elif opcao==5:
+                    nome_aluno=input("Digite o nome do aluno para ver os seus dados: ").title()
+                    aluno.ver_dados_de_um_aluno(nome_aluno)
                     
                 elif opcao==6:
+                    nome_id=input("Digita o nome do aluno que ques apagar: ").title()
+                    aluno.deletar(nome_id)
+                
+                elif opcao==7:
                     break
         
         case 2:
+            while True:
+                print("1.Cadastrar professores\n2.Litar professores\n3.Listar professores de uma disciplina")
+                print("4.Ver dados de um professor\n5.Deletar professor\n6.Sair")
+                opcao=int(input("Digite a sua opção: "))
 
-            professor.adicionar("Maria Gomes", "Português", "923987654", "maria@email.com")
+                if opcao==1:
+                    nome=input("Digite o nome do professor: ").title()
+                    especialidade=input("Digite a especialidade do professor/disciplina: ").title()
+                    telefone=input("Digite o numero do telefone do professor: ")
+                    email=input("Digite o email do professor: ")
+                    professor.adicionar(nome, especialidade, telefone,email)
+                
+                elif opcao==2:
+                    professor.listar()
+                
+                elif opcao==3:
+                    especialidade_id=input("Digite a disciplina que ques ver os professores: ").title()
+                    professor.listar_por_especialidade(especialidade_id)
+                
+                elif opcao==4:
+                    professor.listar()
+                    professor_id=int(input("Digite o id do professor par ver os seus dados: "))
+                    professor.ver_dados_do_professor(professor_id)
+                    break
+        
+        case 3:
             disciplina.adicionar("Português", "Línguas")
 
             # Matrícula
@@ -338,7 +405,6 @@ if __name__ == "__main__":
             presenca.registrar(1, 1, "2025-09-21", True)
 
     # Listando
-    print("📌 Professores:", professor.listar())
     print("📌 Disciplinas:", disciplina.listar())
     print("📌 Matrículas:", matricula.listar())
     print("📌 Notas:", nota.listar())
