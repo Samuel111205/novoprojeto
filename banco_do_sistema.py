@@ -69,3 +69,5 @@ def criar_tabbelas():
     conn.commit()
     conn.close()
 
+
+

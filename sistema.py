@@ -155,6 +155,16 @@ class Professor:
             print(f"Id: {i[0]}| Nome: {i[1]}| Especialidade: {i[2]}| Telefone: {i[3]}| Email: {i[4]}")
         conn.close()
     
+    def deletar(self,id_prof):
+        conn=self.db_manager.connect()
+        cursor=conn.cursor()
+
+        cursor.execute("DELETE FROM professores WHERE id=?",(id_prof,))
+        conn.commit()
+        conn.close()
+        print("🗑️ Aluno removido!")
+
+    
 
 # -------------------------------
 # Classe Disciplina
@@ -163,13 +173,13 @@ class Disciplina:
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
-    def adicionar(self, nome, curso):
+    def adicionar(self, nome, curso,classe):
         conn = self.db_manager.connect()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO disciplinas (nome, curso)
-            VALUES (?, ?)
-        """, (nome, curso))
+            INSERT INTO disciplinas (nome, curso,classe)
+            VALUES (?, ?,?)
+        """, (nome, curso,classe))
         conn.commit()
         conn.close()
         print("✅ Disciplina cadastrada!")
@@ -179,8 +189,34 @@ class Disciplina:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM disciplinas")
         disciplinas = cursor.fetchall()
+        print("📌 Lista das Disciplinas ")
+        for i in disciplinas:
+            print(f"Id: {i[0]}| Nome: {i[1]}| Curso: {i[2]}| Classe: {i[3]}")
         conn.close()
-        return disciplinas
+    
+    def listar_informatica(self,):
+        conn=self.db_manager.connect()
+        cursor=conn.cursor()
+
+        cursor.execute("SELECT * FROM disciplinas WHERE curso== 'Informatica' ")
+        disciplinas = cursor.fetchall()
+        print("📌 Lista das Disciplinas do curso de Informatica")
+        for i in disciplinas:
+            print(f"Id: {i[0]}| Nome: {i[1]}| Curso: {i[2]}")
+        conn.close()
+
+    def listar_contabilidade(self,):
+        conn=self.db_manager.connect()
+        cursor=conn.cursor()
+
+        cursor.execute("SELECT * FROM disciplinas WHERE curso== 'Contabilidade' ")
+        disciplinas = cursor.fetchall()
+        print("📌 Lista das Disciplinas do curso de Contabilidade")
+        for i in disciplinas:
+            print(f"Id: {i[0]}| Nome: {i[1]}| Curso: {i[2]}")
+        conn.close()
+
+
 
 
 # -------------------------------
@@ -210,8 +246,10 @@ class Matricula:
             JOIN alunos a ON m.aluno_id = a.id
         """)
         matriculas = cursor.fetchall()
+        print("📌 Lista dos alunos matriculados")
+        for i in matriculas:
+            print(f"Id: {i[0]}| Nome: {i[1]}| Curso: {i[2]}| Ano letivo: {i[3]}")
         conn.close()
-        return matriculas
 
 
 # -------------------------------
@@ -282,6 +320,7 @@ class Presenca:
 # Testando tudo
 # -------------------------------
 banco_do_sistema.criar_tabbelas()
+#banco_do_sistema.alterar_tabelas()
 
 if __name__ == "__main__":
     db = DatabaseManager()
@@ -392,20 +431,65 @@ if __name__ == "__main__":
                     professor.listar()
                     professor_id=int(input("Digite o id do professor par ver os seus dados: "))
                     professor.ver_dados_do_professor(professor_id)
+                
+                elif opcao==5:
+                    aluno.listar()
+                    id_prof=int(input("Digite o id do professor a ser excluido: "))
+                    professor.deletar(id_prof)
+                
+                elif opcao==6:
                     break
         
         case 3:
-            disciplina.adicionar("Português", "Línguas")
+            while True:
+                print("1.Cadastrar disciplinas\n2.Litar disciplinas\n3.listar disciplina da informatica")
+                print("4.listar disciplina da informatica\n5.Sair")
+                
+                opcao=int(input("Digitea sua opção: "))
 
-            # Matrícula
-            matricula.adicionar(1, "Informática", "2025")
+                if opcao==1:
+                    nome=input("Digite o nome da disciplina:  ").title()
+                    curso=input("Digite o curso: ").title()
+                    classe=input("Digite a classe da disciplina: ").upper()
+                    disciplina.adicionar(nome,curso,classe)
+                
+                elif opcao==2:
+                    disciplina.listar()
+                
+                elif opcao==3:
+                    disciplina.listar_informatica()
+
+                elif opcao==4:
+                    disciplina.listar_contabilidade()
+
+                elif opcao==5:
+                    break
+        
+        case 4:
+            while True:
+                print("1.Matricular alunos\n2.Litar alunos Matriculados\n3.Listar alunos matriculados em um curso")
+                print("4.Sair")
+
+                opcao=int(input("Digite  sua opção: "))
+                if opcao==1:
+                    aluno.listar()
+                    aluno_id=int(input("Digite o id do aluno a ser matriculado: "))
+                    curso=input("Digite o curso do aluno: ")
+                    ano_letivo=input("Digite o ano letivo: ")
+                    # Matrícula
+                    matricula.adicionar(aluno_id,curso,ano_letivo)
+
+                elif opcao==2:
+                    matricula.listar()
+
+        case 5:
             # Nota
             nota.adicionar(1, 1, "1º Trimestre", 15)
             # Presença
             presenca.registrar(1, 1, "2025-09-21", True)
 
     # Listando
-    print("📌 Disciplinas:", disciplina.listar())
-    print("📌 Matrículas:", matricula.listar())
+    
+
     print("📌 Notas:", nota.listar())
     print("📌 Presenças:", presenca.listar())
