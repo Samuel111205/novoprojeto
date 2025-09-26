@@ -3,11 +3,14 @@ import sqlite3
 def conectar():
     return sqlite3.connect("banco_escolar.db")
 
-def criar_tabbelas():
-    conn=conectar()
-    cursor=conn.cursor()
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS alunos (
+def criar_tabelas():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    # Tabela de alunos
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS alunos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             data_nascimento DATE NOT NULL,
@@ -19,7 +22,9 @@ def criar_tabbelas():
         )
     """)
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS professores (
+    # Tabela de professores
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS professores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             especialidade TEXT,
@@ -28,14 +33,19 @@ def criar_tabbelas():
         )
     """)
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS disciplinas (
+    # Tabela de disciplinas
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS disciplinas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
-            curso TEXT
+            curso TEXT,
+            classe TEXT
         )
     """)
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS matriculas (
+    # Tabela de matrículas
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS matriculas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             aluno_id INTEGER NOT NULL,
             curso TEXT NOT NULL,
@@ -44,7 +54,9 @@ def criar_tabbelas():
         )
     """)
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS notas (
+    # Tabela de notas
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             aluno_id INTEGER NOT NULL,
             disciplina_id INTEGER NOT NULL,
@@ -55,7 +67,9 @@ def criar_tabbelas():
         )
     """)
 
-    cursor.execute("""CREATE TABLE IF NOT EXISTS presencas (
+    # Tabela de presenças
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS presencas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             aluno_id INTEGER NOT NULL,
             disciplina_id INTEGER NOT NULL,
@@ -66,8 +80,33 @@ def criar_tabbelas():
         )
     """)
 
+    # Tabela de vagas (controle de capacidade por curso)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vagas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            curso TEXT UNIQUE NOT NULL,
+            total_vagas INTEGER NOT NULL,
+            vagas_ocupadas INTEGER DEFAULT 0
+        )
+    """)
+
+    # Inserir cursos padrão, se ainda não existirem
+    cursos = [("Informatica", 80), ("Contabilidade", 80), ("Finanças", 80)]
+    for c, v in cursos:
+        cursor.execute("INSERT OR IGNORE INTO vagas (curso, total_vagas) VALUES (?, ?)", (c, v))
+
+    # Tabela de usuários (login)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            senha TEXT NOT NULL,
+            tipo TEXT CHECK(tipo IN ('aluno', 'professor', 'diretor')) NOT NULL,
+            referencia_id INTEGER
+        )
+    """)
+
     conn.commit()
     conn.close()
-
-
+print("✅ Banco e tabelas criados com sucesso!")
 
