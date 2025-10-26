@@ -108,5 +108,5 @@ def criar_tabelas():
 
     conn.commit()
     conn.close()
-print("✅ Banco e tabelas criados com sucesso!")
+    print("✅ Banco e tabelas criados com sucesso!")
 

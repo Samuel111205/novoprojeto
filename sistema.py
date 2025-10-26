@@ -196,26 +196,24 @@ class Aluno:
         conn.close()
 
 
-    def atualizar(self):
+    def atualizar(self,opcao):
         conn = self.db_manager.connect()
         cursor = conn.cursor()
-        print("1.Atualizar nome do aluno\n2.Atualizar curso do aluno\n3.Atualizar turma do aluno")
-        opcao = int(input("Digite a sua opção: "))
 
         if opcao == 1:
-            aluno.listar()
+            #aluno.listar()
             aluno_id = int(input("Digite o id do aluno a ser atualizado: "))
             nome = input("Digite o novo nome do aluno: ").title()
             cursor.execute("UPDATE alunos SET nome=? WHERE id=?", (nome, aluno_id))
 
         elif opcao == 2:
-            aluno.listar()
+            #aluno_model.listar()
             aluno_id = int(input("Digite o id do aluno a  ser atualizado: "))
             curso = input("Digite o novo curso do aluno: ").title()
             cursor.execute("UPDATE alunos SET curso=? WHERE id=?", (curso, aluno_id))
 
         elif opcao == 3:
-            aluno.listar()
+            #aluno_model.listar()
             aluno_id = int(input("Digite o id do aluno a  ser atualizado: "))
             turma = input("Digite a nova turma do aluno: ").upper()
             cursor.execute("UPDATE alunos SET turma=? WHERE id=?", (turma, aluno_id))
@@ -431,21 +429,6 @@ class Nota:
         conn.close()
         print("✅ Nota registrada.")
 
-    def listar_por_aluno(self, aluno_id):
-        self.gerar_boletim(aluno_id)
-
-    def calcular_media_trimestre(self, aluno_id, trimestre):
-        conn = self.db_manager.connect()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT AVG(n.nota)
-            FROM notas n
-            WHERE n.aluno_id=? AND n.trimestre=?
-        """, (aluno_id, trimestre))
-        media = cursor.fetchone()[0]
-        conn.close()
-        return round(media, 2) if media else None
-
     def calcular_media_final(self, aluno_id):
         conn = self.db_manager.connect()
         cursor = conn.cursor()
@@ -475,31 +458,41 @@ class Nota:
             print("\n📘 Nenhuma nota encontrada.")
             return
 
-        # Agrupar notas por disciplina
+        # Agrupar as notas por disciplina e trimestre
         boletim = {}
         for disciplina, trimestre, nota in rows:
             boletim.setdefault(disciplina, {}).setdefault(trimestre, []).append(nota)
 
-        print("\n📊 BOLETIM ESCOLAR")
-        print("-" * 60)
-        print(f"{'Disciplina':20s} {'1º Tri':>8} {'2º Tri':>8} {'3º Tri':>8} {'Média':>8}")
-        print("-" * 60)
+        print("\n📊 BOLETIM ESCOLAR COMPLETO")
+        print("-" * 75)
+        print(f"{'Disciplina':20s} {'Trimestre':>10s} {'Notas':>20s} {'Média':>10s}")
+        print("-" * 75)
 
-        for disc, notas_tris in boletim.items():
-            medias_tris = []
-            for t in ["1º", "2º", "3º"]:
-                notas = notas_tris.get(t, [])
-                media_t = sum(notas) / len(notas) if notas else 0
-                medias_tris.append(media_t)
-            media_final_disc = round(sum(medias_tris) / len([m for m in medias_tris if m > 0]), 2) if any(medias_tris) else 0
-            print(f"{disc:20s} {medias_tris[0]:8.1f} {medias_tris[1]:8.1f} {medias_tris[2]:8.1f} {media_final_disc:8.1f}")
+        medias_finais = []
 
-        print("-" * 60)
-        media_final_geral = self.calcular_media_final(aluno_id)
-        print(f"{'Média Final Geral:':40s} {media_final_geral:8.2f}")
+        for disc, trimestres in boletim.items():
+            for trimestre, notas in trimestres.items():
+                media_t = sum(notas) / len(notas)
+                notas_texto = ", ".join(f"{n:.1f}" for n in notas)
+                print(f"{disc:20s} {trimestre:>10s} {notas_texto:>20s} {media_t:10.2f}")
+            # média final da disciplina (média dos trimestres)
+            todas_medias = [sum(notas) / len(notas) for notas in trimestres.values()]
+            media_final_disc = round(sum(todas_medias) / len(todas_medias), 2)
+            medias_finais.append(media_final_disc)
+            print(f"{'':20s} {'':>10s} {'Média Final:':>20s} {media_final_disc:10.2f}")
+            print("-" * 75)
+
+        # Média final geral
+        media_final_geral = round(sum(medias_finais) / len(medias_finais), 2)
         situacao = "🟢 Aprovado" if media_final_geral >= 10 else "🔴 Reprovado"
-        print(f"{'Situação:':40s} {situacao}")
-        print("-" * 60)
+
+        print(f"{'Média Final Geral:':>55s} {media_final_geral:10.2f}")
+        print(f"{'Situação:':>55s} {situacao:>10s}")
+        print("-" * 75)
+
+    def listar_por_aluno(self, aluno_id):
+        self.gerar_boletim(aluno_id)
+
 
 
 # -------------------------------
@@ -680,7 +673,8 @@ def main():
                     print("\n-- Alunos --")
                     print("1. Listar alunos")
                     print("2. Ver dados do aluno por ID")
-                    print("3. Voltar")
+                    print("3. Atualizar alunos")
+                    print("4.Voltar")
                     s = input("Escolha: ").strip()
                     if s == "1":
                         aluno_model.listar()
@@ -688,6 +682,11 @@ def main():
                         aid = int(input("ID do aluno: "))
                         aluno_model.ver_meus_dados(aid)
                     elif s == "3":
+                        print("1.Atualizar nome do aluno\n2.Atualizar curso do aluno\n3.Atualizar turma do aluno")
+                        opcao = int(input("Digite a sua opção: "))
+                        aluno_model.listar()
+                        aluno_model.atualizar(opcao)
+                    elif s==4:
                         break
                     else:
                         print("⚠️ Opção inválida.")
